@@ -1,18 +1,31 @@
+import { useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { AppProvider, useApp, Screen } from "@/context/AppContext";
 import { Titlebar } from "@/components/Titlebar";
 import { Rail } from "@/components/Rail";
 import { LauncherScreen } from "@/screens/launcher";
+import { ClipboardScreen } from "@/screens/clipboard";
 import { ExtensionsScreen } from "@/screens/extensions";
 import { SettingsScreen } from "@/screens/settings";
 
 const SCREENS: Record<Screen, React.FC> = {
   launcher:   LauncherScreen,
+  clipboard:  ClipboardScreen,
   extensions: ExtensionsScreen,
   settings:   SettingsScreen
 };
 
 function AppShell() {
   const { theme, transparency, screen } = useApp();
+
+  useEffect(() => {
+    if (screen === "launcher") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") invoke("hide_window");
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [screen]);
 
   const isDark = theme === "dark";
   const winBg = transparency
@@ -33,9 +46,6 @@ function AppShell() {
           backdropFilter: transparency ? "blur(32px) saturate(180%)" : "none",
           WebkitBackdropFilter: transparency ? "blur(32px) saturate(180%)" : "none",
           border: `1px solid ${winBorder}`,
-          boxShadow: isDark
-            ? "0 40px 120px rgba(0,0,0,0.9), 0 8px 32px rgba(0,0,0,0.6)"
-            : "0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)",
         }}
       >
         <Titlebar />

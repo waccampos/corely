@@ -4,7 +4,7 @@ import { ACCENT_PRESETS } from "@/data";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { Switch } from "@/components/ui/switch";
 import { Kbd } from "@/components/ui/kbd";
-import { Sun, Moon, Zap, Github, Check, SlidersHorizontal, Palette, Keyboard, Shield, Info, RotateCcw } from "@/icons";
+import { Sun, Moon, Zap, Github, Check, SlidersHorizontal, Palette, Keyboard, Info, RotateCcw } from "@/icons";
 import { cn } from "@/common/utils";
 
 function SettingsRow({
@@ -109,7 +109,6 @@ const NAV_ITEMS: { id: Section; icon: ReactNode }[] = [
   { id: "Geral",       icon: <SlidersHorizontal size={14} /> },
   { id: "Aparência",   icon: <Palette size={14} /> },
   { id: "Atalhos",     icon: <Keyboard size={14} /> },
-  { id: "Privacidade", icon: <Shield size={14} /> },
   { id: "Sobre",       icon: <Info size={14} /> },
 ];
 
@@ -257,14 +256,6 @@ export function SettingsScreen() {
           </div>
         )}
 
-        {section === "Privacidade" && (
-          <>
-            <SettingsRow label="Armazenamento local apenas"  desc="Dados ficam somente no dispositivo"                  val={true}  onChange={() => {}} />
-            <SettingsRow label="Analytics anônimos"          desc="Ajuda a melhorar o Corely (sem dados pessoais)"       val={false} onChange={() => {}} />
-            <SettingsRow label="Limpar histórico ao fechar"  desc="Remove o clipboard ao encerrar"                       val={false} onChange={() => {}} />
-            <SettingsRow label="Excluir campos de senha"     desc="Não armazena entradas de campos de senha"             val={true}  onChange={() => {}} />
-          </>
-        )}
 
         {section === "Sobre" && (
           <div className="flex flex-col items-center pt-6 gap-4 text-center">
@@ -281,7 +272,7 @@ export function SettingsScreen() {
             <p className="text-xs text-zinc-500 max-w-[240px] leading-relaxed">
               Alternativa open-source ao Raycast para Linux. Leve, extensível e com personalização avançada.
             </p>
-            <button className="flex items-center gap-2 h-7 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs transition-colors">
+            <button onClick={() => window.open("https://github.com/waccampos/corely")} className="flex items-center gap-2 h-7 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs transition-colors">
               <Github size={13} /> Ver no GitHub
             </button>
             <div className="text-[10px] text-zinc-600 dark:text-zinc-500">Feito com ♥ pela comunidade Linux</div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { EXTENSIONS_DATA } from "@/data";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +10,8 @@ type Filter = "todos" | "ativos" | "inativos";
 export function ExtensionsScreen() {
   const [exts, setExts] = useState(EXTENSIONS_DATA);
   const [filter, setFilter] = useState<Filter>("todos");
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const selectedRef = useRef<HTMLDivElement>(null);
 
   const displayed =
     filter === "todos"
@@ -22,6 +24,41 @@ export function ExtensionsScreen() {
     setExts((prev) =>
       prev.map((x) => (x.id === id ? { ...x, enabled: !x.enabled } : x))
     );
+
+  useEffect(() => { setSelectedIdx(0); }, [filter]);
+
+  useEffect(() => {
+    setSelectedIdx(prev => Math.min(prev, Math.max(0, displayed.length - 1)));
+  }, [displayed.length]);
+
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ block: "nearest" });
+  }, [selectedIdx]);
+
+  useEffect(() => {
+    const COLS = 2;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIdx(prev => Math.min(prev + COLS, displayed.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIdx(prev => Math.max(prev - COLS, 0));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setSelectedIdx(prev => Math.min(prev + 1, displayed.length - 1));
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setSelectedIdx(prev => Math.max(prev - 1, 0));
+      } else if ((e.key === "Enter" || e.key === " ") && displayed[selectedIdx]) {
+        e.preventDefault();
+        toggle(displayed[selectedIdx].id);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayed, selectedIdx]);
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -59,11 +96,16 @@ export function ExtensionsScreen() {
 
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-2 content-start">
-        {displayed.map((ext) => (
+        {displayed.map((ext, idx) => (
           <div
             key={ext.id}
+            ref={idx === selectedIdx ? selectedRef : null}
+            onClick={() => setSelectedIdx(idx)}
             className={cn(
-              "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 flex flex-col gap-3 transition-opacity duration-200",
+              "rounded-xl p-3.5 flex flex-col gap-3 transition-all duration-75 cursor-pointer border",
+              idx === selectedIdx
+                ? "bg-[var(--accent-dim)] border-[var(--accent-color)]"
+                : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
               !ext.enabled && "opacity-50"
             )}
           >

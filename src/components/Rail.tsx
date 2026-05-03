@@ -1,12 +1,13 @@
 import { SVGProps, ReactElement } from "react";
 import { useApp, Screen } from "@/context/AppContext";
-import { Command, Layers, SettingsIcon } from "@/icons";
+import { Command, ClipboardIcon, Layers, SettingsIcon } from "@/icons";
 import { cn } from "@/common/utils";
 
 type IconComponent = (p: SVGProps<SVGSVGElement> & { size?: number }) => ReactElement;
 
 const NAV: { id: Screen; Icon: IconComponent; label: string }[] = [
   { id: "launcher",   Icon: Command,       label: "Launcher" },
+  { id: "clipboard",  Icon: ClipboardIcon, label: "Clipboard" },
   { id: "extensions", Icon: Layers,        label: "Extensões" },
 ];
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-export type Screen = "launcher" | "extensions" | "settings";
+export type Screen = "launcher" | "clipboard" | "extensions" | "settings";
 export type Theme = "dark" | "light";
 
 interface AppContextValue {
@@ -45,7 +45,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [transparency, setTransparencyState] = useState(
     () => localStorage.getItem("corely-transparency") !== "false"
   );
-  const VALID_SCREENS: Screen[] = ["launcher", "extensions", "settings"];
+  const VALID_SCREENS: Screen[] = ["launcher", "clipboard", "extensions", "settings"];
   const [screen, setScreenState] = useState<Screen>(() => {
     const saved = localStorage.getItem("corely-screen") as Screen;
     return VALID_SCREENS.includes(saved) ? saved : "launcher";

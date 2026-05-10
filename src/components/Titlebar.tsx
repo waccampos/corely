@@ -2,7 +2,7 @@ import { useApp } from "@/context/AppContext";
 import { Zap, SettingsIcon } from "@/icons";
 
 export function Titlebar() {
-  const { theme, accent, screen, setScreen } = useApp();
+  const { theme, accent, screen, setScreen, updateAvailable } = useApp();
 
   return (
     <div
@@ -25,9 +25,12 @@ export function Titlebar() {
       <button
         aria-label="Configurações"
         onClick={() => setScreen("settings")}
-        className="flex items-center justify-center p-1.5 rounded-md text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors"
+        className="relative flex items-center justify-center p-1.5 rounded-md text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors"
       >
         <SettingsIcon size={15} />
+        {updateAvailable && (
+          <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-red-500" />
+        )}
       </button>
     </div>
   );

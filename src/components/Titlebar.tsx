@@ -1,8 +1,8 @@
 import { useApp } from "@/context/AppContext";
-import { Zap, Sun, Moon } from "@/icons";
+import { Zap, SettingsIcon } from "@/icons";
 
 export function Titlebar() {
-  const { theme, setTheme, accent, screen } = useApp();
+  const { theme, accent, screen, setScreen } = useApp();
 
   return (
     <div
@@ -23,10 +23,11 @@ export function Titlebar() {
         <span className="text-zinc-500 text-[11px] font-mono">{screen}</span>
       </div>
       <button
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        aria-label="Configurações"
+        onClick={() => setScreen("settings")}
         className="flex items-center justify-center p-1.5 rounded-md text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors"
       >
-        {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+        <SettingsIcon size={15} />
       </button>
     </div>
   );

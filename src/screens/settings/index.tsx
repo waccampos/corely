@@ -4,7 +4,7 @@ import { ACCENT_PRESETS } from "@/data";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { Switch } from "@/components/ui/switch";
 import { Kbd } from "@/components/ui/kbd";
-import { Sun, Moon, Zap, Github, Check, SlidersHorizontal, Palette, Keyboard, Info, RotateCcw } from "@/icons";
+import { Sun, Moon, Zap, Github, Check, SlidersHorizontal, Palette, Keyboard, Info, RotateCcw, Layers } from "@/icons";
 import { cn } from "@/common/utils";
 
 function SettingsRow({
@@ -103,13 +103,14 @@ function ShortcutRow({
   );
 }
 
-type Section = "Geral" | "Aparência" | "Atalhos" | "Privacidade" | "Sobre";
+type Section = "Geral" | "Aparência" | "Atalhos" | "Extensões" | "Sobre";
 
 const NAV_ITEMS: { id: Section; icon: ReactNode }[] = [
-  { id: "Geral",       icon: <SlidersHorizontal size={14} /> },
-  { id: "Aparência",   icon: <Palette size={14} /> },
-  { id: "Atalhos",     icon: <Keyboard size={14} /> },
-  { id: "Sobre",       icon: <Info size={14} /> },
+  { id: "Geral",      icon: <SlidersHorizontal size={14} /> },
+  { id: "Aparência",  icon: <Palette size={14} /> },
+  { id: "Atalhos",    icon: <Keyboard size={14} /> },
+  { id: "Extensões",  icon: <Layers size={14} /> },
+  { id: "Sobre",      icon: <Info size={14} /> },
 ];
 
 export function SettingsScreen() {
@@ -119,6 +120,7 @@ export function SettingsScreen() {
     compact, setCompact,
     showIcons, setShowIcons,
     transparency, setTransparency,
+    exts, toggleExt,
   } = useApp();
   const { shortcuts, updateShortcut, resetShortcuts } = useShortcuts();
 
@@ -256,6 +258,30 @@ export function SettingsScreen() {
           </div>
         )}
 
+        {section === "Extensões" && (
+          <div>
+            {exts.map((ext) => (
+              <div
+                key={ext.id}
+                className="flex items-center py-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0 mr-3"
+                  style={{ background: ext.color + "20" }}
+                >
+                  {ext.emoji}
+                </div>
+                <div className="flex-1 pr-4 min-w-0">
+                  <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                    {ext.name}
+                  </div>
+                  <div className="text-xs text-zinc-500 mt-0.5 truncate">{ext.desc}</div>
+                </div>
+                <Switch checked={ext.enabled} onChange={() => toggleExt(ext.id)} />
+              </div>
+            ))}
+          </div>
+        )}
 
         {section === "Sobre" && (
           <div className="flex flex-col items-center pt-6 gap-4 text-center">

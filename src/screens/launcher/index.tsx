@@ -101,16 +101,23 @@ export function LauncherScreen() {
   );
 
   const groups = useMemo(() => {
-    const g: Record<string, LauncherItem[]> = {};
+    const buckets: Record<string, LauncherItem[]> = {};
     appFiltered.forEach((a) => {
       const cat =
         a.type === "app" ? "Aplicativos" :
         a.type === "system" ? "Sistema" :
         (a as { isDir?: boolean }).isDir ? "Pastas" : "Arquivos";
-      if (!g[cat]) g[cat] = [];
-      g[cat].push(a);
+      if (!buckets[cat]) buckets[cat] = [];
+      buckets[cat].push(a);
     });
+
+    // Ordem de exibição: Aplicativos → Extensões → Sistema/Pastas/Arquivos → Clipboard
+    const g: Record<string, LauncherItem[]> = {};
+    if (buckets["Aplicativos"]) g["Aplicativos"] = buckets["Aplicativos"];
     if (activeExtEntries.length > 0) g["Extensões"] = activeExtEntries;
+    for (const cat of ["Sistema", "Pastas", "Arquivos"] as const) {
+      if (buckets[cat]) g[cat] = buckets[cat];
+    }
     if (clipEntries.length > 0) g["Clipboard"] = clipEntries;
     return g;
   }, [appFiltered, activeExtEntries, clipEntries]);

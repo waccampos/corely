@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { EXTENSIONS_DATA, Extension } from "@/data";
 
-export type Screen = "launcher" | "clipboard" | "extensions" | "settings";
+export type Screen = "launcher" | "clipboard" | "settings";
 export type Theme = "dark" | "light";
 
 interface AppContextValue {
@@ -16,6 +17,8 @@ interface AppContextValue {
   setTransparency: (v: boolean) => void;
   screen: Screen;
   setScreen: (s: Screen) => void;
+  exts: Extension[];
+  toggleExt: (id: number) => void;
 }
 
 const AppContext = createContext<AppContextValue>({} as AppContextValue);
@@ -28,6 +31,8 @@ function persist<T>(key: string, setter: (v: T) => void) {
     setter(v);
   };
 }
+
+const VALID_SCREENS: Screen[] = ["launcher", "clipboard", "settings"];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(
@@ -45,11 +50,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [transparency, setTransparencyState] = useState(
     () => localStorage.getItem("corely-transparency") !== "false"
   );
-  const VALID_SCREENS: Screen[] = ["launcher", "clipboard", "extensions", "settings"];
   const [screen, setScreenState] = useState<Screen>(() => {
     const saved = localStorage.getItem("corely-screen") as Screen;
     return VALID_SCREENS.includes(saved) ? saved : "launcher";
   });
+  const [exts, setExtsState] = useState<Extension[]>(() => {
+    try {
+      const saved = localStorage.getItem("corely-exts");
+      if (saved) {
+        const map: Record<number, boolean> = JSON.parse(saved);
+        return EXTENSIONS_DATA.map((e) => ({ ...e, enabled: map[e.id] ?? e.enabled }));
+      }
+    } catch {}
+    return EXTENSIONS_DATA;
+  });
+
+  const toggleExt = (id: number) => {
+    setExtsState((prev) => {
+      const next = prev.map((e) => (e.id === id ? { ...e, enabled: !e.enabled } : e));
+      const map = Object.fromEntries(next.map((e) => [e.id, e.enabled]));
+      localStorage.setItem("corely-exts", JSON.stringify(map));
+      return next;
+    });
+  };
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -80,6 +103,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setTransparency: persist("corely-transparency", setTransparencyState),
         screen,
         setScreen: persist("corely-screen", setScreenState),
+        exts,
+        toggleExt,
       }}
     >
       {children}

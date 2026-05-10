@@ -27,7 +27,24 @@ export interface FileEntry {
   isDir: boolean;
 }
 
-export type LauncherItem = AppEntry | SystemEntry | FileEntry;
+export interface ExtensionEntry {
+  type: "extension";
+  id: string;
+  name: string;
+  desc: string;
+  emoji: string;
+  color: string;
+  screen?: string;
+}
+
+export interface ClipboardEntry {
+  type: "clipboard";
+  id: string;
+  name: string;
+  content: string;
+}
+
+export type LauncherItem = AppEntry | SystemEntry | FileEntry | ExtensionEntry | ClipboardEntry;
 
 export function useApps() {
   const [apps, setApps] = useState<LauncherItem[]>([]);

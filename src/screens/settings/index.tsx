@@ -187,6 +187,7 @@ export function SettingsScreen() {
     compact, setCompact,
     showIcons, setShowIcons,
     transparency, setTransparency,
+    transparencyAmount, setTransparencyAmount,
     exts, toggleExt,
   } = useApp();
   const { shortcuts, updateShortcut, resetShortcuts } = useShortcuts();
@@ -301,6 +302,25 @@ export function SettingsScreen() {
             <SettingsRow label="Modo compacto"          desc="Remove subtítulos e reduz ícones no launcher" val={compact}      onChange={setCompact} />
             <SettingsRow label="Ícones nos resultados"  desc="Exibe ícones ao lado dos itens"               val={showIcons}    onChange={setShowIcons} />
             <SettingsRow label="Efeito de transparência" desc="Fundo desfocado (frosted glass)"             val={transparency} onChange={setTransparency} />
+            {transparency && (
+              <div className="flex items-center py-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
+                <div className="flex-1 pr-4">
+                  <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100">Intensidade</div>
+                  <div className="text-xs text-zinc-500 mt-0.5 leading-snug">Quantidade de transparência do fundo</div>
+                </div>
+                <div className="flex items-center gap-3 w-44">
+                  <input
+                    type="range"
+                    min={15}
+                    max={100}
+                    value={transparencyAmount}
+                    onChange={e => setTransparencyAmount(Number(e.target.value))}
+                    className="flex-1 accent-[var(--accent-color)]"
+                  />
+                  <span className="text-xs font-mono text-zinc-500 w-8 text-right">{transparencyAmount}%</span>
+                </div>
+              </div>
+            )}
           </>
         )}
 

@@ -3,16 +3,22 @@ import { AppProvider, useApp, Screen } from "@/context/AppContext";
 import { Titlebar } from "@/components/Titlebar";
 import { LauncherScreen } from "@/screens/launcher";
 import { ClipboardScreen } from "@/screens/clipboard";
+import { ColorPickerScreen } from "@/screens/colorpicker";
+import { PasswordScreen } from "@/screens/password";
+import { JsonFormatterScreen } from "@/screens/jsonformatter";
 import { SettingsScreen } from "@/screens/settings";
 
 const SCREENS: Record<Screen, React.FC> = {
-  launcher:  LauncherScreen,
-  clipboard: ClipboardScreen,
-  settings:  SettingsScreen,
+  launcher:      LauncherScreen,
+  clipboard:     ClipboardScreen,
+  colorpicker:   ColorPickerScreen,
+  password:      PasswordScreen,
+  jsonformatter: JsonFormatterScreen,
+  settings:      SettingsScreen,
 };
 
 function AppShell() {
-  const { theme, transparency, screen, setScreen } = useApp();
+  const { theme, transparency, transparencyAmount, screen, setScreen } = useApp();
 
   useEffect(() => {
     if (screen === "launcher") return;
@@ -24,8 +30,9 @@ function AppShell() {
   }, [screen, setScreen]);
 
   const isDark = theme === "dark";
+  const alpha = (transparencyAmount / 100).toFixed(2);
   const winBg = transparency
-    ? isDark ? "rgba(9,9,11,0.75)" : "rgba(244,244,245,0.75)"
+    ? isDark ? `rgba(9,9,11,${alpha})` : `rgba(244,244,245,${alpha})`
     : isDark ? "#09090b" : "#fafafa";
   const winBorder = isDark ? "#27272a" : "#d4d4d8";
 

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { EXTENSIONS_DATA, Extension } from "@/data";
 import { check } from "@tauri-apps/plugin-updater";
 
-export type Screen = "launcher" | "clipboard" | "settings";
+export type Screen = "launcher" | "clipboard" | "colorpicker" | "password" | "jsonformatter" | "settings";
 export type Theme = "dark" | "light";
 
 interface AppContextValue {
@@ -16,6 +16,8 @@ interface AppContextValue {
   setShowIcons: (v: boolean) => void;
   transparency: boolean;
   setTransparency: (v: boolean) => void;
+  transparencyAmount: number;
+  setTransparencyAmount: (v: number) => void;
   screen: Screen;
   setScreen: (s: Screen) => void;
   exts: Extension[];
@@ -35,7 +37,7 @@ function persist<T>(key: string, setter: (v: T) => void) {
   };
 }
 
-const VALID_SCREENS: Screen[] = ["launcher", "clipboard", "settings"];
+const VALID_SCREENS: Screen[] = ["launcher", "clipboard", "colorpicker", "password", "jsonformatter", "settings"];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(
@@ -52,6 +54,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const [transparency, setTransparencyState] = useState(
     () => localStorage.getItem("corely-transparency") !== "false"
+  );
+  const [transparencyAmount, setTransparencyAmountState] = useState(
+    () => Number(localStorage.getItem("corely-transparency-amount") || 75)
   );
   const [screen, setScreenState] = useState<Screen>(() => {
     const saved = localStorage.getItem("corely-screen") as Screen;
@@ -122,6 +127,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setShowIcons: persist("corely-icons", setShowIconsState),
         transparency,
         setTransparency: persist("corely-transparency", setTransparencyState),
+        transparencyAmount,
+        setTransparencyAmount: persist("corely-transparency-amount", setTransparencyAmountState),
         screen,
         setScreen: persist("corely-screen", setScreenState),
         exts,

@@ -40,6 +40,8 @@ export function LauncherScreen() {
       const el = inputRef.current;
       if (!el) return;
       el.focus();
+      // Forces WebKitGTK to commit native input state after programmatic focus,
+      // preventing the first keypress from being swallowed.
       el.setSelectionRange(el.value.length, el.value.length);
     };
     requestAnimationFrame(() => requestAnimationFrame(focusInput));
@@ -80,7 +82,7 @@ export function LauncherScreen() {
         desc: e.desc,
         emoji: e.emoji,
         color: e.color,
-        screen: e.id === 1 ? "clipboard" : undefined,
+        screen: e.screen,
       })),
     [exts, q]
   );

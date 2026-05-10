@@ -17,6 +17,7 @@ export interface Extension {
   desc: string;
   enabled: boolean;
   official: boolean;
+  screen?: string;
 }
 
 export interface AccentPreset {
@@ -40,7 +41,7 @@ export interface Shortcut {
 }
 
 export const EXTENSIONS_DATA: Extension[] = [
-  { id: 1, emoji: "📋", color: "#9b59b6", name: "Clipboard History",  desc: "Acesse itens recentes do clipboard",          enabled: true,  official: true  },
+  { id: 1, emoji: "📋", color: "#9b59b6", name: "Clipboard History",  desc: "Acesse itens recentes do clipboard",          enabled: true,  official: true,  screen: "clipboard" },
   { id: 2, emoji: "🎨", color: "#3b82f6", name: "Color Picker",        desc: "Capture cores de qualquer ponto da tela",     enabled: true,  official: true  },
   { id: 3, emoji: "🔑", color: "#e67e22", name: "Password Generator",  desc: "Gere senhas fortes com um atalho",            enabled: true,  official: true  },
   { id: 4, emoji: "⚡", color: "#f59e0b", name: "Git Commands",         desc: "Atalhos para os comandos Git mais usados",    enabled: true,  official: true  },

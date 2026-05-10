@@ -66,7 +66,7 @@ export function LauncherScreen() {
       const cat =
         a.type === "app" ? "Aplicativos" :
         a.type === "system" ? "Sistema" :
-        a.isDir ? "Pastas" : "Arquivos";
+        (a as { isDir?: boolean }).isDir ? "Pastas" : "Arquivos";
       if (!g[cat]) g[cat] = [];
       g[cat].push(a);
     });
@@ -76,7 +76,7 @@ export function LauncherScreen() {
   useEffect(() => setSelected(0), [query]);
 
   const openApp = (app: LauncherItem) => {
-    const exec = app.type === "file" ? app.path : app.exec;
+    const exec = app.type === "file" ? app.path : (app as { exec: string }).exec;
     invoke("launch_app", { id: app.id, exec });
     invoke("hide_window");
   };

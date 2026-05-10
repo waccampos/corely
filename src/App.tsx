@@ -2,17 +2,14 @@ import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { AppProvider, useApp, Screen } from "@/context/AppContext";
 import { Titlebar } from "@/components/Titlebar";
-import { Rail } from "@/components/Rail";
 import { LauncherScreen } from "@/screens/launcher";
 import { ClipboardScreen } from "@/screens/clipboard";
-import { ExtensionsScreen } from "@/screens/extensions";
 import { SettingsScreen } from "@/screens/settings";
 
 const SCREENS: Record<Screen, React.FC> = {
-  launcher:   LauncherScreen,
-  clipboard:  ClipboardScreen,
-  extensions: ExtensionsScreen,
-  settings:   SettingsScreen
+  launcher:  LauncherScreen,
+  clipboard: ClipboardScreen,
+  settings:  SettingsScreen,
 };
 
 function AppShell() {
@@ -50,7 +47,6 @@ function AppShell() {
       >
         <Titlebar />
         <div className="flex flex-1 overflow-hidden">
-          <Rail />
           <Screen />
         </div>
       </div>

@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { AppProvider, useApp, Screen } from "@/context/AppContext";
 import { Titlebar } from "@/components/Titlebar";
 import { LauncherScreen } from "@/screens/launcher";
@@ -13,16 +12,16 @@ const SCREENS: Record<Screen, React.FC> = {
 };
 
 function AppShell() {
-  const { theme, transparency, screen } = useApp();
+  const { theme, transparency, screen, setScreen } = useApp();
 
   useEffect(() => {
     if (screen === "launcher") return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") invoke("hide_window");
+      if (e.key === "Escape") setScreen("launcher");
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [screen]);
+  }, [screen, setScreen]);
 
   const isDark = theme === "dark";
   const winBg = transparency

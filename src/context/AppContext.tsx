@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { EXTENSIONS_DATA, Extension } from "@/data";
+import { check } from "@tauri-apps/plugin-updater";
 
 export type Screen = "launcher" | "clipboard" | "settings";
 export type Theme = "dark" | "light";
@@ -19,6 +20,8 @@ interface AppContextValue {
   setScreen: (s: Screen) => void;
   exts: Extension[];
   toggleExt: (id: number) => void;
+  updateAvailable: boolean;
+  installUpdate: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue>({} as AppContextValue);
@@ -64,6 +67,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
     return EXTENSIONS_DATA;
   });
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const pendingUpdate = useRef<Awaited<ReturnType<typeof check>>>(null);
 
   const toggleExt = (id: number) => {
     setExtsState((prev) => {
@@ -73,6 +78,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
   };
+
+  const installUpdate = async () => {
+    if (!pendingUpdate.current) return;
+    await pendingUpdate.current.downloadAndInstall();
+  };
+
+  useEffect(() => {
+    check()
+      .then((update) => {
+        if (update) {
+          pendingUpdate.current = update;
+          setUpdateAvailable(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -105,6 +126,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setScreen: persist("corely-screen", setScreenState),
         exts,
         toggleExt,
+        updateAvailable,
+        installUpdate,
       }}
     >
       {children}

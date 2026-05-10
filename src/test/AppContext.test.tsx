@@ -1,5 +1,14 @@
 import { render, screen, act } from "@testing-library/react";
 import { AppProvider, useApp } from "@/context/AppContext";
+import { check } from "@tauri-apps/plugin-updater";
+
+vi.mock("@tauri-apps/plugin-updater", () => ({
+  check: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(check).mockResolvedValue(null);
+});
 
 function ExtsConsumer() {
   const { exts, toggleExt } = useApp();
@@ -36,5 +45,46 @@ describe("AppContext — exts", () => {
     localStorage.setItem("corely-screen", "extensions");
     render(<AppProvider><ExtsConsumer /></AppProvider>);
     expect(screen.getByTestId("count")).toBeTruthy();
+  });
+});
+
+function UpdateConsumer() {
+  const { updateAvailable, installUpdate } = useApp();
+  return (
+    <div>
+      <span data-testid="update-available">{String(updateAvailable)}</span>
+      <button onClick={installUpdate}>install</button>
+    </div>
+  );
+}
+
+describe("AppContext — updater", () => {
+  beforeEach(() => {
+    vi.mocked(check).mockResolvedValue(null);
+  });
+
+  it("updateAvailable is false when check returns null", async () => {
+    vi.mocked(check).mockResolvedValue(null);
+    render(<AppProvider><UpdateConsumer /></AppProvider>);
+    await act(async () => {});
+    expect(screen.getByTestId("update-available").textContent).toBe("false");
+  });
+
+  it("updateAvailable is true when check returns an update", async () => {
+    const fakeUpdate = { downloadAndInstall: vi.fn() } as any;
+    vi.mocked(check).mockResolvedValue(fakeUpdate);
+    render(<AppProvider><UpdateConsumer /></AppProvider>);
+    await act(async () => {});
+    expect(screen.getByTestId("update-available").textContent).toBe("true");
+  });
+
+  it("installUpdate calls downloadAndInstall on the pending update", async () => {
+    const downloadAndInstall = vi.fn().mockResolvedValue(undefined);
+    const fakeUpdate = { downloadAndInstall } as any;
+    vi.mocked(check).mockResolvedValue(fakeUpdate);
+    render(<AppProvider><UpdateConsumer /></AppProvider>);
+    await act(async () => {});
+    await act(async () => { screen.getByText("install").click(); });
+    expect(downloadAndInstall).toHaveBeenCalled();
   });
 });

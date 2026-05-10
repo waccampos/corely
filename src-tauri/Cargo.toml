@@ -1,6 +1,6 @@
 [package]
 name = "corely"
-version = "0.1.0"
+version = "1.0.0"
 description = "Corely is a raycast alternative written in rust with tauri to run on linux"
 authors = ["you"]
 edition = "2021"

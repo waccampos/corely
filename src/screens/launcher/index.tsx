@@ -1,21 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useApp } from "@/context/AppContext";
-import { useApps, LauncherItem } from "@/hooks/useApps";
+import { useApps, LauncherItem, ExtensionEntry, ClipboardEntry } from "@/hooks/useApps";
 import { useLauncherKeys } from "@/hooks/useLauncherKeys";
 import { AppIcon } from "@/components/AppIcon";
 import { Kbd } from "@/components/ui/kbd";
 import { Search, X, ChevronRight } from "@/icons";
 import { cn } from "@/common/utils";
 
+interface ClipItem {
+  id: number;
+  type: string;
+  content: string;
+  timestamp: number;
+}
+
 export function LauncherScreen() {
-  const { compact, showIcons } = useApp();
+  const { compact, showIcons, exts, setScreen } = useApp();
   const { apps, loading } = useApps();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [fileResults, setFileResults] = useState<LauncherItem[]>([]);
+  const [clipHistory, setClipHistory] = useState<ClipItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    invoke<ClipItem[]>("get_clipboard_history")
+      .then(setClipHistory)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     selectedRef.current?.scrollIntoView({ block: "nearest" });
@@ -26,8 +40,6 @@ export function LauncherScreen() {
       const el = inputRef.current;
       if (!el) return;
       el.focus();
-      // Forces WebKitGTK to commit native input state after programmatic focus,
-      // preventing the first keypress from being swallowed.
       el.setSelectionRange(el.value.length, el.value.length);
     };
     requestAnimationFrame(() => requestAnimationFrame(focusInput));
@@ -37,10 +49,7 @@ export function LauncherScreen() {
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
-      setFileResults([]);
-      return;
-    }
+    if (q.length < 2) { setFileResults([]); return; }
     const timer = setTimeout(() => {
       invoke<LauncherItem[]>("search_files", { query: q })
         .then(setFileResults)
@@ -49,8 +58,9 @@ export function LauncherScreen() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  const q = query.trim().toLowerCase();
+
+  const appFiltered = useMemo(() => {
     if (!q) return apps;
     const matchedApps = apps.filter(
       (a) =>
@@ -58,11 +68,39 @@ export function LauncherScreen() {
         ("description" in a ? a.description ?? "" : "").toLowerCase().includes(q)
     );
     return [...matchedApps, ...fileResults];
-  }, [query, apps, fileResults]);
+  }, [q, apps, fileResults]);
+
+  const activeExtEntries = useMemo((): ExtensionEntry[] =>
+    exts
+      .filter((e) => e.enabled && (!q || e.name.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q)))
+      .map((e) => ({
+        type: "extension" as const,
+        id: String(e.id),
+        name: e.name,
+        desc: e.desc,
+        emoji: e.emoji,
+        color: e.color,
+        screen: e.id === 1 ? "clipboard" : undefined,
+      })),
+    [exts, q]
+  );
+
+  const clipEntries = useMemo((): ClipboardEntry[] =>
+    clipHistory
+      .filter((c) => !q || c.content.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map((c) => ({
+        type: "clipboard" as const,
+        id: String(c.id),
+        name: c.content,
+        content: c.content,
+      })),
+    [clipHistory, q]
+  );
 
   const groups = useMemo(() => {
     const g: Record<string, LauncherItem[]> = {};
-    filtered.forEach((a) => {
+    appFiltered.forEach((a) => {
       const cat =
         a.type === "app" ? "Aplicativos" :
         a.type === "system" ? "Sistema" :
@@ -70,20 +108,41 @@ export function LauncherScreen() {
       if (!g[cat]) g[cat] = [];
       g[cat].push(a);
     });
+    if (activeExtEntries.length > 0) g["Extensões"] = activeExtEntries;
+    if (clipEntries.length > 0) g["Clipboard"] = clipEntries;
     return g;
-  }, [filtered]);
+  }, [appFiltered, activeExtEntries, clipEntries]);
+
+  const allFiltered = useMemo(() => Object.values(groups).flat(), [groups]);
 
   useEffect(() => setSelected(0), [query]);
 
-  const openApp = (app: LauncherItem) => {
-    const exec = app.type === "file" ? app.path : (app as { exec: string }).exec;
-    invoke("launch_app", { id: app.id, exec });
+  const openApp = (item: LauncherItem) => {
+    if (item.type === "extension") {
+      if (item.screen) setScreen(item.screen as Parameters<typeof setScreen>[0]);
+      return;
+    }
+    if (item.type === "clipboard") {
+      invoke("write_clipboard", { text: item.content });
+      invoke("hide_window");
+      return;
+    }
+    const exec = item.type === "file" ? item.path : (item as { exec: string }).exec;
+    invoke("launch_app", { id: item.id, exec });
     invoke("hide_window");
   };
 
-  const handleKey = useLauncherKeys({ filtered, selected, query, setSelected, setQuery, openApp });
+  const handleKey = useLauncherKeys({
+    filtered: allFiltered,
+    selected,
+    query,
+    setSelected,
+    setQuery,
+    openApp,
+  });
 
   const itemPy = compact ? "py-1" : "py-2";
+  const iconSize = compact ? 26 : 32;
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -113,7 +172,7 @@ export function LauncherScreen() {
           <div className="flex items-center justify-center h-full">
             <span className="text-sm text-zinc-600 animate-pulse">Carregando apps...</span>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : allFiltered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-zinc-600">
             <Search size={24} />
             <span className="text-sm">
@@ -127,8 +186,15 @@ export function LauncherScreen() {
                 {cat}
               </div>
               {items.map((item) => {
-                const idx = filtered.indexOf(item);
+                const idx = allFiltered.indexOf(item);
                 const sel = idx === selected;
+                const subtitle =
+                  item.type === "extension"
+                    ? item.desc
+                    : "description" in item
+                    ? item.description
+                    : null;
+
                 return (
                   <div
                     key={item.id}
@@ -143,19 +209,38 @@ export function LauncherScreen() {
                         : "border-l-transparent"
                     )}
                   >
-                    {showIcons && <AppIcon app={item} size={compact ? 26 : 32} />}
+                    {item.type === "extension" ? (
+                      <div
+                        className="shrink-0 flex items-center justify-center rounded-lg text-lg"
+                        style={{ width: iconSize, height: iconSize, background: item.color + "20" }}
+                      >
+                        {item.emoji}
+                      </div>
+                    ) : item.type === "clipboard" ? (
+                      <div
+                        className="shrink-0 flex items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-800 text-sm"
+                        style={{ width: iconSize, height: iconSize }}
+                      >
+                        📋
+                      </div>
+                    ) : (
+                      showIcons && <AppIcon app={item} size={iconSize} />
+                    )}
+
                     <div className="flex-1 min-w-0">
                       <div
                         className={cn(
                           "text-sm font-medium truncate",
-                          sel ? "text-[var(--accent-color)]" : "text-zinc-600 dark:text-zinc-100"
+                          sel
+                            ? "text-[var(--accent-color)]"
+                            : "text-zinc-600 dark:text-zinc-100"
                         )}
                       >
                         {item.name}
                       </div>
-                      {!compact && "description" in item && item.description && (
+                      {!compact && subtitle && (
                         <div className="text-xs text-zinc-500 truncate mt-0.5">
-                          {item.description}
+                          {subtitle}
                         </div>
                       )}
                     </div>
@@ -170,7 +255,7 @@ export function LauncherScreen() {
 
       <div className="h-9 border-t border-zinc-200 dark:border-zinc-800 flex items-center px-4 gap-4 shrink-0">
         {(
-          [["↑↓", "navegar"], ["↵", "abrir"], ["⌘K", "ações"], ["Esc", "limpar"]] as const
+          [["↑↓", "navegar"], ["↵", "abrir"], ["Esc", "limpar"]] as const
         ).map(([k, l]) => (
           <div key={k} className="flex items-center gap-1.5">
             <Kbd>{k}</Kbd>
@@ -179,7 +264,7 @@ export function LauncherScreen() {
         ))}
         <div className="flex-1" />
         <span className="text-[10px] text-zinc-600 font-mono">
-          {filtered.length} resultados
+          {allFiltered.length} resultados
         </span>
       </div>
     </div>

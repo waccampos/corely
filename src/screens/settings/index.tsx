@@ -119,6 +119,7 @@ function SobreSection() {
   const [version, setVersion] = useState("");
   const [updating, setUpdating] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     getVersion().then(setVersion).catch(() => {});
@@ -126,9 +127,14 @@ function SobreSection() {
 
   const handleUpdate = async () => {
     setUpdating(true);
-    await installUpdate();
-    setUpdating(false);
-    setDone(true);
+    try {
+      await installUpdate();
+      setDone(true);
+    } catch {
+      setError(true);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -165,6 +171,9 @@ function SobreSection() {
       )}
       {done && (
         <p className="text-xs text-zinc-500">Reinicie o app para aplicar a atualização.</p>
+      )}
+      {error && (
+        <p className="text-xs text-red-500">Erro ao baixar atualização. Tente novamente.</p>
       )}
       <div className="text-[10px] text-zinc-600 dark:text-zinc-500">Feito com ♥ pela comunidade Linux</div>
     </div>

@@ -39,6 +39,8 @@ jobs:
   publish:
     needs: check-version
     if: needs.check-version.outputs.should-release == 'true'
+    permissions:
+      contents: write
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4

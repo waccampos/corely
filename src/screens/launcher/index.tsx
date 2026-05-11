@@ -9,6 +9,23 @@ import { Search, X, ChevronRight } from "@/icons";
 import { cn } from "@/common/utils";
 import { ClipItem } from "../clipboard/types.clipboard";
 
+const SYSTEM_ICONS: Record<string, string> = {
+  "system.shutdown": "🔴",
+  "system.reboot": "🔄",
+  "system.suspend": "💤",
+  "system.volume.0": "🔇",
+  "system.volume.10": "🔈",
+  "system.volume.20": "🔈",
+  "system.volume.30": "🔈",
+  "system.volume.40": "🔉",
+  "system.volume.50": "🔉",
+  "system.volume.60": "🔉",
+  "system.volume.70": "🔊",
+  "system.volume.80": "🔊",
+  "system.volume.90": "🔊",
+  "system.volume.100": "🔊",
+};
+
 export function LauncherScreen() {
   const { compact, showIcons, exts, setScreen } = useApp();
   const { apps, loading } = useApps();
@@ -225,6 +242,13 @@ export function LauncherScreen() {
                         style={{ width: iconSize, height: iconSize }}
                       >
                         📋
+                      </div>
+                    ) : item.type === "system" ? (
+                      <div
+                        className="shrink-0 flex items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-800 text-sm"
+                        style={{ width: iconSize, height: iconSize }}
+                      >
+                        {SYSTEM_ICONS[item.id] ?? "⚙️"}
                       </div>
                     ) : (
                       showIcons && <AppIcon app={item} size={iconSize} />

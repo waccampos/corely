@@ -1,6 +1,8 @@
-import { useApp } from "@/context/AppContext";
-import { getVersion } from "@tauri-apps/api/app";
 import { useEffect, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
+
+import { useApp } from "@/context/AppContext";
+import { Github, Zap } from "@/icons";
 
 export function AboutSection() {
   const { accent, updateAvailable, installUpdate } = useApp();

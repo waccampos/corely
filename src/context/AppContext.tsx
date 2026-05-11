@@ -43,7 +43,6 @@ function persist<T>(key: string, setter: (v: T) => void) {
   };
 }
 
-const VALID_SCREENS: Screen[] = ["launcher", "clipboard", "colorpicker", "password", "jsonformatter", "settings"];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(

@@ -169,9 +169,7 @@ export function LauncherScreen() {
   const handleKey = useLauncherKeys({
     filtered: allFiltered,
     selected,
-    query,
     setSelected,
-    setQuery,
     openApp,
   });
 

@@ -1,21 +1,16 @@
-import { invoke } from "@tauri-apps/api/core";
 import { LauncherItem } from "@/hooks/useApps";
 
 interface Options {
   filtered: LauncherItem[];
   selected: number;
-  query: string;
   setSelected: (fn: (s: number) => number) => void;
-  setQuery: (q: string) => void;
   openApp: (app: LauncherItem) => void;
 }
 
 export function useLauncherKeys({
   filtered,
   selected,
-  query,
   setSelected,
-  setQuery,
   openApp,
 }: Options) {
   

@@ -92,12 +92,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     check()
       .then((update) => {
-        if (update) {
+        console.log("[updater] check result:", update);
+        if (update?.available) {
           pendingUpdate.current = update;
           setUpdateAvailable(true);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[updater] check error:", err);
+      });
   }, []);
 
   useEffect(() => {

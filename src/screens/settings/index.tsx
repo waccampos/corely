@@ -29,6 +29,9 @@ export function SettingsScreen() {
     showIcons, setShowIcons,
     transparency, setTransparency,
     transparencyAmount, setTransparencyAmount,
+    closeOnBlur, setCloseOnBlur,
+    fileSearch, setFileSearch,
+    maxResults, setMaxResults,
     exts, toggleExt,
   } = useApp();
   const { shortcuts, updateShortcut, resetShortcuts } = useShortcuts();
@@ -59,11 +62,28 @@ export function SettingsScreen() {
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {section === "Geral" && (
           <>
-            <SettingsRow label="Iniciar com o sistema"      desc="Inicia o Corely automaticamente no login"         val={true}  onChange={() => {}} />
-            <SettingsRow label="Executar em segundo plano"  desc="Mantém ativo na bandeja do sistema"                val={true}  onChange={() => {}} />
-            <SettingsRow label="Mostrar no dock"            desc="Exibe ícone na barra de tarefas"                   val={false} onChange={() => {}} />
-            <SettingsRow label="Animações de interface"     desc="Transições e micro-animações"                      val={true}  onChange={() => {}} />
-            <SettingsRow label="Som ao abrir"               desc="Feedback sonoro ao ativar o launcher"              val={false} onChange={() => {}} />
+            <SettingsRow label="Executar em segundo plano"  desc="Mantém ativo na bandeja do sistema"              val={true}         onChange={() => {}} />
+            <SettingsRow label="Fechar ao perder foco"      desc="Fecha o launcher ao clicar fora da janela"        val={closeOnBlur}  onChange={setCloseOnBlur} />
+            <SettingsRow label="Busca de arquivos"          desc="Inclui arquivos e pastas nos resultados"           val={fileSearch}   onChange={setFileSearch} />
+            <SettingsRow label="Animações de interface"     desc="Transições e micro-animações"                      val={true}         onChange={() => {}} />
+            <SettingsRow label="Som ao abrir"               desc="Feedback sonoro ao ativar o launcher"              val={false}        onChange={() => {}} />
+            <div className="flex items-center py-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
+              <div className="flex-1 pr-4">
+                <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100">Máximo de resultados</div>
+                <div className="text-xs text-zinc-500 mt-0.5 leading-snug">Itens exibidos por categoria</div>
+              </div>
+              <div className="flex items-center gap-3 w-44">
+                <input
+                  type="range"
+                  min={3}
+                  max={20}
+                  value={maxResults}
+                  onChange={(e) => setMaxResults(Number(e.target.value))}
+                  className="flex-1 accent-[var(--accent-color)]"
+                />
+                <span className="text-xs font-mono text-zinc-500 w-6 text-right">{maxResults}</span>
+              </div>
+            </div>
           </>
         )}
 

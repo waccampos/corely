@@ -27,7 +27,7 @@ const SYSTEM_ICONS: Record<string, string> = {
 };
 
 export function LauncherScreen() {
-  const { compact, showIcons, exts, setScreen } = useApp();
+  const { compact, showIcons, exts, setScreen, fileSearch, maxResults } = useApp();
   const { apps, loading } = useApps();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
@@ -62,14 +62,14 @@ export function LauncherScreen() {
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) { setFileResults([]); return; }
+    if (!fileSearch || q.length < 2) { setFileResults([]); return; }
     const timer = setTimeout(() => {
       invoke<LauncherItem[]>("search_files", { query: q })
         .then(setFileResults)
         .catch(() => {});
     }, 300);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, fileSearch]);
 
   const q = query.trim().toLowerCase();
 
@@ -124,14 +124,14 @@ export function LauncherScreen() {
 
     // Ordem de exibição: Aplicativos → Extensões → Sistema/Pastas/Arquivos → Clipboard
     const g: Record<string, LauncherItem[]> = {};
-    if (buckets["Aplicativos"]) g["Aplicativos"] = buckets["Aplicativos"];
-    if (activeExtEntries.length > 0) g["Extensões"] = activeExtEntries;
+    if (buckets["Aplicativos"]) g["Aplicativos"] = buckets["Aplicativos"].slice(0, maxResults);
+    if (activeExtEntries.length > 0) g["Extensões"] = activeExtEntries.slice(0, maxResults);
     for (const cat of ["Sistema", "Pastas", "Arquivos"] as const) {
-      if (buckets[cat]) g[cat] = buckets[cat];
+      if (buckets[cat]) g[cat] = buckets[cat].slice(0, maxResults);
     }
-    if (clipEntries.length > 0) g["Clipboard"] = clipEntries;
+    if (clipEntries.length > 0) g["Clipboard"] = clipEntries.slice(0, maxResults);
     return g;
-  }, [appFiltered, activeExtEntries, clipEntries]);
+  }, [appFiltered, activeExtEntries, clipEntries, maxResults]);
 
   const allFiltered = useMemo(() => Object.values(groups).flat(), [groups]);
 

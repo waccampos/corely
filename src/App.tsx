@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { AppProvider, useApp, Screen } from "@/context/AppContext";
 import { Titlebar } from "@/components/Titlebar";
 import { LauncherScreen } from "@/screens/launcher";
@@ -18,7 +19,7 @@ const SCREENS: Record<Screen, React.FC> = {
 };
 
 function AppShell() {
-  const { theme, transparency, transparencyAmount, screen, setScreen } = useApp();
+  const { theme, transparency, transparencyAmount, closeOnBlur, screen, setScreen } = useApp();
 
   useEffect(() => {
     if (screen === "launcher") return;
@@ -28,6 +29,13 @@ function AppShell() {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [screen, setScreen]);
+
+  useEffect(() => {
+    if (!closeOnBlur) return;
+    const handler = () => invoke("hide_window");
+    window.addEventListener("blur", handler);
+    return () => window.removeEventListener("blur", handler);
+  }, [closeOnBlur]);
 
   const isDark = theme === "dark";
   const alpha = (transparencyAmount / 100).toFixed(2);

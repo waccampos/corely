@@ -18,6 +18,12 @@ interface AppContextValue {
   setTransparency: (v: boolean) => void;
   transparencyAmount: number;
   setTransparencyAmount: (v: number) => void;
+  closeOnBlur: boolean;
+  setCloseOnBlur: (v: boolean) => void;
+  fileSearch: boolean;
+  setFileSearch: (v: boolean) => void;
+  maxResults: number;
+  setMaxResults: (v: number) => void;
   screen: Screen;
   setScreen: (s: Screen) => void;
   exts: Extension[];
@@ -57,6 +63,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const [transparencyAmount, setTransparencyAmountState] = useState(
     () => Number(localStorage.getItem("corely-transparency-amount") || 75)
+  );
+  const [closeOnBlur, setCloseOnBlurState] = useState(
+    () => localStorage.getItem("corely-close-on-blur") !== "false"
+  );
+  const [fileSearch, setFileSearchState] = useState(
+    () => localStorage.getItem("corely-file-search") !== "false"
+  );
+  const [maxResults, setMaxResultsState] = useState(
+    () => Number(localStorage.getItem("corely-max-results") || 8)
   );
   const [screen, setScreenState] = useState<Screen>(() => {
     const saved = localStorage.getItem("corely-screen") as Screen;
@@ -132,6 +147,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setTransparency: persist("corely-transparency", setTransparencyState),
         transparencyAmount,
         setTransparencyAmount: persist("corely-transparency-amount", setTransparencyAmountState),
+        closeOnBlur,
+        setCloseOnBlur: persist("corely-close-on-blur", setCloseOnBlurState),
+        fileSearch,
+        setFileSearch: persist("corely-file-search", setFileSearchState),
+        maxResults,
+        setMaxResults: persist("corely-max-results", setMaxResultsState),
         screen,
         setScreen: persist("corely-screen", setScreenState),
         exts,

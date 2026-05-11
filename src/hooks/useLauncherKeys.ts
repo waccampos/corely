@@ -20,16 +20,9 @@ export function useLauncherKeys({
 }: Options) {
   
   return (e: React.KeyboardEvent) => {
-  console.log(e.key);
-      if (e.key === "ArrowDown") { e.preventDefault(); setSelected((s) => Math.min(s + 1, filtered.length - 1)); }
+      console.log(e.key);
+    if (e.key === "ArrowDown") { e.preventDefault(); setSelected((s) => Math.min(s + 1, filtered.length - 1)); }
     if (e.key === "ArrowUp")   { e.preventDefault(); setSelected((s) => Math.max(s - 1, 0)); }
     if (e.key === "Enter" && filtered[selected]) openApp(filtered[selected]);
-    if (e.key === "Escape") {
-      if (query.trim().length > 0) {
-          setQuery(""); 
-          return;
-      }
-      invoke("hide_window");
-    }
   };
 }

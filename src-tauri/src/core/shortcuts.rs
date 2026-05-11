@@ -15,7 +15,7 @@ pub fn defaults() -> Vec<ShortcutEntry> {
     vec![
         ShortcutEntry {
             action: "Abrir Corely".into(),
-            keys: vec!["⌃".into(), "⌥".into(), "Espaço".into()],
+            keys: vec!["⌃".into(), "\\".into()],
         },
         ShortcutEntry {
             action: "Histórico do Clipboard".into(),
@@ -117,6 +117,17 @@ fn char_to_code(c: char) -> Option<Code> {
         '7' => Some(Code::Digit7),
         '8' => Some(Code::Digit8),
         '9' => Some(Code::Digit9),
+        '\\' => Some(Code::Backslash),
+        '/' => Some(Code::Slash),
+        '.' => Some(Code::Period),
+        ',' => Some(Code::Comma),
+        ';' => Some(Code::Semicolon),
+        '\'' => Some(Code::Quote),
+        '[' => Some(Code::BracketLeft),
+        ']' => Some(Code::BracketRight),
+        '-' => Some(Code::Minus),
+        '=' => Some(Code::Equal),
+        '`' => Some(Code::Backquote),
         _ => None,
     }
 }

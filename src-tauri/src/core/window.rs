@@ -45,7 +45,16 @@ pub fn show<R: Runtime>(handle: &AppHandle<R>) {
         let handle2 = handle.clone();
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_millis(80));
-            let _ = handle2.run_on_main_thread(move || force_focus_x11());
+            let handle3 = handle2.clone();
+            let _ = handle2.run_on_main_thread(move || {
+                let visible = handle3
+                    .get_webview_window("main")
+                    .and_then(|w| w.is_visible().ok())
+                    .unwrap_or(false);
+                if visible {
+                    force_focus_x11();
+                }
+            });
         });
     }
 }

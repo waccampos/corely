@@ -73,10 +73,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [maxResults, setMaxResultsState] = useState(
     () => Number(localStorage.getItem("corely-max-results") || 8)
   );
-  const [screen, setScreenState] = useState<Screen>(() => {
-    const saved = localStorage.getItem("corely-screen") as Screen;
-    return VALID_SCREENS.includes(saved) ? saved : "launcher";
-  });
+  const [screen, setScreenState] = useState<Screen>("launcher");
   const [exts, setExtsState] = useState<Extension[]>(() => {
     try {
       const saved = localStorage.getItem("corely-exts");
@@ -154,7 +151,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         maxResults,
         setMaxResults: persist("corely-max-results", setMaxResultsState),
         screen,
-        setScreen: persist("corely-screen", setScreenState),
+        setScreen: setScreenState,
         exts,
         toggleExt,
         updateAvailable,

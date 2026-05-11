@@ -61,6 +61,20 @@ export function LauncherScreen() {
   }, []);
 
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      if (query.trim().length > 0) {
+        setQuery("");
+      } else {
+        invoke("hide_window");
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [query]);
+
+  useEffect(() => {
     const q = query.trim();
     if (!fileSearch || q.length < 2) { setFileResults([]); return; }
     const timer = setTimeout(() => {

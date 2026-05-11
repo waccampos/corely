@@ -22,6 +22,12 @@ function AppShell() {
   const { theme, transparency, transparencyAmount, closeOnBlur, screen, setScreen } = useApp();
 
   useEffect(() => {
+    const onFocus = () => setScreen("launcher");
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [setScreen]);
+
+  useEffect(() => {
     if (screen === "launcher") return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setScreen("launcher");

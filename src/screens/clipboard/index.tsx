@@ -1,43 +1,25 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+
 import { ClipboardIcon, Search, Copy, Trash2, X } from "@/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/common/utils";
+import { useCopy } from "@/hooks/useCopy";
 
-type ItemType = "code" | "url" | "text";
+import { ClipItem, TYPE_STYLES } from "./types.clipboard";
+import { relativeTime } from "./lib.clipboard";
 
-interface ClipItem {
-  id: number;
-  type: ItemType;
-  content: string;
-  timestamp: number;
-}
-
-const TYPE_STYLES: Record<ItemType, string> = {
-  code: "text-[var(--accent-color)] bg-[var(--accent-dim)]",
-  url:  "text-blue-400 bg-blue-400/10",
-  text: "text-zinc-400 bg-zinc-700/50",
-};
-
-function relativeTime(timestamp: number): string {
-  const seconds = Math.floor(Date.now() / 1000) - timestamp;
-  if (seconds < 60) return "agora";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
 
 export function ClipboardScreen() {
   const [items, setItems] = useState<ClipItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
-  const [copied, setCopied] = useState(false);
   const [tick, setTick] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedRef = useRef<HTMLDivElement>(null);
+
+  const { copyText, copied } = useCopy();
 
   const loadHistory = useCallback(async () => {
     const data = await invoke<ClipItem[]>("get_clipboard_history");
@@ -51,7 +33,6 @@ export function ClipboardScreen() {
     return () => { unlisten.then(fn => fn()); };
   }, [loadHistory]);
 
-  // Refresh relative timestamps every 30s
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 30_000);
     return () => clearInterval(id);
@@ -70,16 +51,6 @@ export function ClipboardScreen() {
     await invoke("delete_clipboard_item", { id });
     setItems(prev => prev.filter(i => i.id !== id));
     if (next) setSelectedId(next.id);
-  }
-
-  async function copy(content: string) {
-    try {
-      await invoke("write_clipboard", { text: content });
-    } catch {
-      navigator.clipboard.writeText(content).catch(() => {});
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
   }
 
   async function pasteNow(content: string) {
@@ -225,7 +196,7 @@ export function ClipboardScreen() {
                 <Button
                   variant="outline"
                   className="flex-1 text-xs h-8 px-4 gap-2 rounded-md"
-                  onClick={() => copy(sel.content)}
+                  onClick={() => copyText(sel.content)}
                 >
                   <Copy size={12} />
                   {copied ? "Copiado ✓" : "Copiar"}

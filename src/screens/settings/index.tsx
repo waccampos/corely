@@ -1,108 +1,15 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { getVersion } from "@tauri-apps/api/app";
+import { ReactNode, useState } from "react";
+
 import { useApp } from "@/context/AppContext";
 import { ACCENT_PRESETS } from "@/data";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import { Switch } from "@/components/ui/switch";
-import { Kbd } from "@/components/ui/kbd";
-import { Sun, Moon, Zap, Github, Check, SlidersHorizontal, Palette, Keyboard, Info, RotateCcw, Layers } from "@/icons";
+import { Sun, Moon, Check, SlidersHorizontal, Palette, Keyboard, Info, RotateCcw, Layers } from "@/icons";
 import { cn } from "@/common/utils";
 
-function SettingsRow({
-  label,
-  desc,
-  val,
-  onChange,
-}: {
-  label: string;
-  desc?: string;
-  val: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center py-3.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
-      <div className="flex-1 pr-4">
-        <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{label}</div>
-        {desc && (
-          <div className="text-xs text-zinc-500 mt-0.5 leading-snug">{desc}</div>
-        )}
-      </div>
-      <Switch checked={val} onChange={onChange} />
-    </div>
-  );
-}
-
-const KEY_DISPLAY: Record<string, string> = {
-  " ": "Espaço", ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→",
-  Enter: "↵", Escape: "Esc", Tab: "⇥", Backspace: "⌫", Delete: "⌦",
-};
-
-function captureCombo(e: React.KeyboardEvent): string[] | null {
-  const mods: string[] = [];
-  if (e.ctrlKey) mods.push("⌃");
-  if (e.altKey) mods.push("⌥");
-  if (e.shiftKey) mods.push("⇧");
-  if (e.metaKey) mods.push("⌘");
-  if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return null;
-  const k = KEY_DISPLAY[e.key] ?? (e.key.length === 1 ? e.key.toUpperCase() : e.key);
-  return [...mods, k];
-}
-
-function ShortcutRow({
-  action,
-  keys,
-  onSave,
-}: {
-  action: string;
-  keys: string[];
-  onSave: (keys: string[]) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [preview, setPreview] = useState<string[]>([]);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (editing) ref.current?.focus();
-  }, [editing]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.key === "Escape") { setEditing(false); setPreview([]); return; }
-    const combo = captureCombo(e);
-    if (!combo) return;
-    setPreview(combo);
-    onSave(combo);
-    setEditing(false);
-  };
-
-  return (
-    <div className="flex items-center py-3 border-b border-zinc-200/60 dark:border-zinc-800/60 group">
-      <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-200">{action}</span>
-      {editing ? (
-        <div
-          ref={ref}
-          tabIndex={0}
-          onKeyDown={handleKeyDown}
-          onBlur={() => { setEditing(false); setPreview([]); }}
-          className="flex gap-1 items-center px-2 py-1 rounded-md border border-[var(--accent-border)] bg-[var(--accent-dim)] min-w-[80px] outline-none cursor-text"
-        >
-          {preview.length > 0
-            ? preview.map((k, i) => <Kbd key={i}>{k}</Kbd>)
-            : <span className="text-[10px] text-zinc-500 whitespace-nowrap">Pressione...</span>}
-        </div>
-      ) : (
-        <button
-          onClick={() => setEditing(true)}
-          title="Clique para editar"
-          className="flex gap-1 hover:opacity-60 transition-opacity"
-        >
-          {keys.map((k, i) => <Kbd key={i}>{k}</Kbd>)}
-        </button>
-      )}
-    </div>
-  );
-}
+import { SettingsRow } from "./components/settings-row";
+import { ShortcutRow } from "./components/shortcutRow";
+import { AboutSection } from "./components/about-section";
 
 type Section = "Geral" | "Aparência" | "Atalhos" | "Extensões" | "Sobre";
 
@@ -113,72 +20,6 @@ const NAV_ITEMS: { id: Section; icon: ReactNode }[] = [
   { id: "Extensões",  icon: <Layers size={14} /> },
   { id: "Sobre",      icon: <Info size={14} /> },
 ];
-
-function SobreSection() {
-  const { accent, updateAvailable, installUpdate } = useApp();
-  const [version, setVersion] = useState("");
-  const [updating, setUpdating] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    getVersion().then(setVersion).catch(() => {});
-  }, []);
-
-  const handleUpdate = async () => {
-    setUpdating(true);
-    try {
-      await installUpdate();
-      setDone(true);
-    } catch {
-      setError(true);
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-center pt-6 gap-4 text-center">
-      <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center"
-        style={{ background: accent + "15", border: `1.5px solid ${accent}40` }}
-      >
-        <Zap size={28} style={{ color: accent }} />
-      </div>
-      <div>
-        <div className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Corely</div>
-        <div className="text-xs text-zinc-500 mt-1">
-          {version ? `Versão ${version} — Linux x86_64` : "Carregando versão..."}
-        </div>
-      </div>
-      <p className="text-xs text-zinc-500 max-w-[240px] leading-relaxed">
-        Alternativa open-source ao Raycast para Linux. Leve, extensível e com personalização avançada.
-      </p>
-      <button
-        onClick={() => window.open("https://github.com/waccampos/corely")}
-        className="flex items-center gap-2 h-7 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 text-xs transition-colors"
-      >
-        <Github size={13} /> Ver no GitHub
-      </button>
-      {updateAvailable && !done && (
-        <button
-          onClick={handleUpdate}
-          disabled={updating}
-          className="flex items-center gap-2 h-7 px-3 rounded-md bg-[var(--accent-color)] text-black text-xs font-medium transition-opacity disabled:opacity-60"
-        >
-          {updating ? "Baixando..." : "Atualizar agora"}
-        </button>
-      )}
-      {done && (
-        <p className="text-xs text-zinc-500">Reinicie o app para aplicar a atualização.</p>
-      )}
-      {error && (
-        <p className="text-xs text-red-500">Erro ao baixar atualização. Tente novamente.</p>
-      )}
-      <div className="text-[10px] text-zinc-600 dark:text-zinc-500">Feito com ♥ pela comunidade Linux</div>
-    </div>
-  );
-}
 
 export function SettingsScreen() {
   const {
@@ -370,7 +211,7 @@ export function SettingsScreen() {
           </div>
         )}
 
-        {section === "Sobre" && <SobreSection />}
+        {section === "Sobre" && <AboutSection />}
       </div>
     </div>
   );

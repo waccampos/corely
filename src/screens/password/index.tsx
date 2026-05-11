@@ -1,81 +1,28 @@
 import { useState, useCallback } from "react";
+
+import { useCopy } from "@/hooks/useCopy";
 import { Copy, Check, RotateCcw, Eye, EyeOff } from "@/icons";
-import { invoke } from "@tauri-apps/api/core";
 import { cn } from "@/common/utils";
 
-const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const LOWER = "abcdefghijklmnopqrstuvwxyz";
-const NUMS  = "0123456789";
-const SYMS  = "!@#$%^&*()-_=+[]{}|;:,.<>?";
-
-function generate(len: number, opts: { upper: boolean; lower: boolean; nums: boolean; syms: boolean }): string {
-  let pool = "";
-  if (opts.upper) pool += UPPER;
-  if (opts.lower) pool += LOWER;
-  if (opts.nums)  pool += NUMS;
-  if (opts.syms)  pool += SYMS;
-  if (!pool) pool = LOWER;
-  const arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  return Array.from(arr).map(n => pool[n % pool.length]).join("");
-}
-
-function getStrength(pw: string): { label: string; color: string; pct: number } {
-  if (!pw) return { label: "", color: "", pct: 0 };
-  let score = 0;
-  if (pw.length >= 12) score++;
-  if (pw.length >= 20) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[a-z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (score <= 2) return { label: "Fraca",       color: "#ef4444", pct: 25  };
-  if (score <= 4) return { label: "Média",        color: "#f59e0b", pct: 60  };
-  if (score <= 5) return { label: "Forte",        color: "#22c55e", pct: 85  };
-  return             { label: "Muito forte",  color: "#00e676", pct: 100 };
-}
-
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: () => void }) {
-  return (
-    <button
-      onClick={onChange}
-      className={cn(
-        "flex-1 py-2 rounded-lg border text-xs font-medium transition-all",
-        value
-          ? "border-[var(--accent-border)] bg-[var(--accent-dim)] text-[var(--accent-color)]"
-          : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-700 dark:hover:text-zinc-300"
-      )}
-    >
-      {label}
-    </button>
-  );
-}
+import { generate, getStrength } from "./lib.password";
+import { PasswordOpts } from "./types.password";
+import { Toggle } from "@/components/ui/toggle";
 
 export function PasswordScreen() {
-  const [length, setLength] = useState(16);
-  const [upper, setUpper] = useState(true);
-  const [lower, setLower] = useState(true);
-  const [nums, setNums] = useState(true);
-  const [syms, setSyms] = useState(false);
+  const [opts, setOpts] = useState<PasswordOpts>({ upper: false, lower: true, nums: true, syms: false });
+  const [length, setLength] = useState(10);
+
+  const defaultOpts = { upper: true, lower: true, nums: true, syms: false };
+  const [password, setPassword] = useState(() => generate(10, defaultOpts));
   const [show, setShow] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [password, setPassword] = useState(() =>
-    generate(16, { upper: true, lower: true, nums: true, syms: false })
-  );
 
   const strength = getStrength(password);
 
-  const regenerate = useCallback(() => {
-    setPassword(generate(length, { upper, lower, nums, syms }));
-    setCopied(false);
-  }, [length, upper, lower, nums, syms]);
+  const { copyText, copied } = useCopy()
 
-  const copy = async () => {
-    try { await invoke("write_clipboard", { text: password }); }
-    catch { navigator.clipboard.writeText(password).catch(() => {}); }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  const regenerate = useCallback(() => {
+    setPassword(generate(length, opts));
+  }, [length, opts]);
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -102,10 +49,10 @@ export function PasswordScreen() {
         <div>
           <div className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500 font-mono mb-2">Caracteres</div>
           <div className="grid grid-cols-2 gap-1.5">
-            <Toggle label="A–Z" value={upper} onChange={() => setUpper(v => !v)} />
-            <Toggle label="a–z" value={lower} onChange={() => setLower(v => !v)} />
-            <Toggle label="0–9" value={nums}  onChange={() => setNums(v => !v)} />
-            <Toggle label="!@#" value={syms}  onChange={() => setSyms(v => !v)} />
+            <Toggle label="A–Z" value={opts.upper} onChange={() => setOpts(v => ({ ...v, upper: !v.upper }) )} />
+            <Toggle label="a–z" value={opts.lower} onChange={() => setOpts(v => ({...v, lower: !v.lower}) )} />
+            <Toggle label="0–9" value={opts.nums}  onChange={() => setOpts(v => ({ ...v, nums: !v.nums }) )} />
+            <Toggle label="!@#" value={opts.syms}  onChange={() => setOpts(v => ({ ...v, syms: !v.syms }) )} />
           </div>
         </div>
 
@@ -153,7 +100,7 @@ export function PasswordScreen() {
         </div>
 
         <button
-          onClick={copy}
+          onClick={() => copyText(password)}
           className={cn(
             "flex items-center justify-center gap-2 h-9 rounded-lg border text-sm font-medium transition-all",
             copied

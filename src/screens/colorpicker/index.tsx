@@ -1,31 +1,11 @@
 import { useState, useCallback } from "react";
+
+import { useCopy } from "@/hooks/useCopy";
 import { Copy, Check } from "@/icons";
-import { invoke } from "@tauri-apps/api/core";
 import { cn } from "@/common/utils";
 
-function hexToRgb(hex: string) {
-  const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
-}
-
-function rgbToHsl(r: number, g: number, b: number) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  let h = 0, s = 0;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-      case g: h = ((b - r) / d + 2) / 6; break;
-      case b: h = ((r - g) / d + 4) / 6; break;
-    }
-  }
-  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
-}
-
-const RECENT_KEY = "corely-recent-colors";
+import { hexToRgb, rgbToHsl } from "./lib.colorpicker";
+import { RECENT_KEY } from "./types.colorpicker";
 
 function loadRecent(): string[] {
   try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; }
@@ -34,8 +14,9 @@ function loadRecent(): string[] {
 export function ColorPickerScreen() {
   const [color, setColor] = useState("#00e676");
   const [hexInput, setHexInput] = useState("#00E676");
-  const [copied, setCopied] = useState<string | null>(null);
   const [recent, setRecent] = useState<string[]>(loadRecent);
+
+  const { copyText, copiedText } = useCopy();
 
   const rgb = hexToRgb(color);
   const hsl = rgb ? rgbToHsl(rgb.r, rgb.g, rgb.b) : null;
@@ -47,13 +28,6 @@ export function ColorPickerScreen() {
         { label: "HSL", value: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)` },
       ]
     : [];
-
-  const copyValue = async (value: string) => {
-    try { await invoke("write_clipboard", { text: value }); }
-    catch { navigator.clipboard.writeText(value).catch(() => {}); }
-    setCopied(value);
-    setTimeout(() => setCopied(null), 1500);
-  };
 
   const commitColor = useCallback((c: string) => {
     setRecent(prev => {
@@ -134,15 +108,15 @@ export function ColorPickerScreen() {
             <span className="text-[10px] font-bold tracking-widest text-zinc-500 font-mono w-7 shrink-0">{label}</span>
             <span className="flex-1 text-sm font-mono text-zinc-800 dark:text-zinc-100 tracking-wide truncate">{value}</span>
             <button
-              onClick={() => copyValue(value)}
+              onClick={() => copyText(value)}
               className={cn(
                 "flex items-center justify-center w-7 h-7 rounded-md transition-colors shrink-0",
-                copied === value
+                copiedText === value
                   ? "text-[var(--accent-color)] bg-[var(--accent-dim)]"
                   : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60"
               )}
             >
-              {copied === value ? <Check size={13} /> : <Copy size={13} />}
+              {copiedText === value ? <Check size={13} /> : <Copy size={13} />}
             </button>
           </div>
         ))}

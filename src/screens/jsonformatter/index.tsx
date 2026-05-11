@@ -1,48 +1,70 @@
 import { useState, useCallback } from "react";
-import { Copy, Check, X, AlertTriangle } from "@/icons";
-import { invoke } from "@tauri-apps/api/core";
-import { cn } from "@/common/utils";
 
-function parseJSON(text: string): { data: unknown; error: null } | { data: null; error: string } {
-  try { return { data: JSON.parse(text), error: null }; }
-  catch (e) { return { data: null, error: (e as Error).message }; }
-}
+import { useCopy } from "@/hooks/useCopy";
+import { Copy, Check, X, AlertTriangle } from "@/icons";
+import { cn } from "@/common/utils";
+import { isErr, isOk } from "@/lib/result";
+
+import { parseJSON } from "./lib.jsonformatter";
+import { IdentType } from "./types.jsonformatter";
 
 export function JsonFormatterScreen() {
   const [input, setInput] = useState("");
-  const [indent, setIndent] = useState(2);
   const [output, setOutput] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+
+  const [indent, setIndent] = useState(IdentType.Space);
+
+  const { copied, copyText } = useCopy();
 
   const format = useCallback(() => {
     if (!input.trim()) return;
-    const { data, error: err } = parseJSON(input);
-    if (data !== null) { setOutput(JSON.stringify(data, null, indent)); setError(null); }
-    else setError(err);
+    const result = parseJSON(input);
+    
+    if (isErr(result)) {
+        setError(result.error);
+        return 
+    }
+
+    if (isOk(result)) { 
+        setOutput(JSON.stringify(result.data, null, indent)); 
+        setError(null); 
+        return 
+    }
   }, [input, indent]);
 
   const minify = useCallback(() => {
     if (!input.trim()) return;
-    const { data, error: err } = parseJSON(input);
-    if (data !== null) { setOutput(JSON.stringify(data)); setError(null); }
-    else setError(err);
-  }, [input]);
+    const result = parseJSON(input);
+    
+    if (isErr(result)) {
+        setError(result.error);
+        return 
+    }
 
-  const copy = async () => {
-    if (!output) return;
-    try { await invoke("write_clipboard", { text: output }); }
-    catch { navigator.clipboard.writeText(output).catch(() => {}); }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+    if (isOk(result)) { 
+        setOutput(JSON.stringify(result.data)); 
+        setError(null); 
+        return 
+    }
+
+  }, [input]);
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const text = e.clipboardData.getData("text");
     setTimeout(() => {
-      const { data, error: err } = parseJSON(text);
-      if (data !== null) { setOutput(JSON.stringify(data, null, indent)); setError(null); }
-      else { setOutput(""); setError(err); }
+      const result = parseJSON(text);   
+
+      if (isErr(result)) { 
+          setError(result.error); 
+          return 
+      }
+      
+      if (isOk(result)) { 
+          setOutput(JSON.stringify(result.data, null, indent)); 
+          setError(null); 
+          return 
+      }
     }, 0);
   };
 
@@ -76,18 +98,18 @@ export function JsonFormatterScreen() {
         <div className="flex items-center gap-2 px-3 h-10 border-b border-zinc-200/60 dark:border-zinc-800/60 shrink-0">
           {/* Indent selector */}
           <div className="flex gap-1">
-            {[2, 4].map(n => (
+            {[IdentType.Space, IdentType.Tab].map(identType => (
               <button
-                key={n}
-                onClick={() => setIndent(n)}
+                key={identType}
+                onClick={() => setIndent(identType)}
                 className={cn(
                   "px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-colors",
-                  indent === n
+                  indent === identType
                     ? "bg-[var(--accent-dim)] text-[var(--accent-color)]"
                     : "text-zinc-500 hover:text-zinc-300"
                 )}
               >
-                {n}
+                {identType}
               </button>
             ))}
           </div>
@@ -109,7 +131,7 @@ export function JsonFormatterScreen() {
 
           {output && (
             <button
-              onClick={copy}
+              onClick={() => copyText(output)}
               className={cn(
                 "flex items-center gap-1 h-6 px-2 rounded-md text-[10px] font-medium transition-all",
                 copied

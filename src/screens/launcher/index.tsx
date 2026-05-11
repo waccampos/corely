@@ -7,13 +7,7 @@ import { AppIcon } from "@/components/AppIcon";
 import { Kbd } from "@/components/ui/kbd";
 import { Search, X, ChevronRight } from "@/icons";
 import { cn } from "@/common/utils";
-
-interface ClipItem {
-  id: number;
-  type: string;
-  content: string;
-  timestamp: number;
-}
+import { ClipItem } from "../clipboard/types.clipboard";
 
 export function LauncherScreen() {
   const { compact, showIcons, exts, setScreen } = useApp();
